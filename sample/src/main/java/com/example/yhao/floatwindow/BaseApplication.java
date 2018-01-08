@@ -1,10 +1,9 @@
 package com.example.yhao.floatwindow;
 
 import android.app.Application;
-import android.os.Build;
+import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.example.yhao.fixedfloatwindow.R;
 import com.yhao.floatwindow.FloatWindow;
@@ -18,6 +17,8 @@ import com.yhao.floatwindow.Screen;
 
 public class BaseApplication extends Application {
 
+    public static OnclickInterface sListener;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -25,19 +26,25 @@ public class BaseApplication extends Application {
         ImageView imageView = new ImageView(getApplicationContext());
         imageView.setImageResource(R.drawable.icon);
 
-
         //效果图1
         FloatWindow
                 .with(getApplicationContext())
                 .setView(imageView)
-                .setWidth(Screen.width,0.2f)
-                .setHeight(Screen.width,0.2f)
+                .setWidth(Screen.width,0.1f)
+                .setHeight(Screen.width,0.1f)
                 .setX(Screen.width,0.8f)
                 .setY(Screen.height,0.3f)
-                .setMoveType(MoveType.slide)
+                .setMoveType(MoveType.active)
                 .setMoveStyle(500,new BounceInterpolator())
-                .setDesktopShow(true)
+                .setDesktopShow(false)
                 .build();
+
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sListener.onclick(view);
+            }
+        });
 
         ImageView imageView2 = new ImageView(getApplicationContext());
         imageView2.setImageResource(R.mipmap.ic_launcher_round);
@@ -54,5 +61,9 @@ public class BaseApplication extends Application {
                 .setMoveType(MoveType.inactive)
                 .setFilter(true,B_Activity.class,C_Activity.class)
                 .build();
+    }
+
+    public static void setOnclick(OnclickInterface listener){
+        sListener = listener;
     }
 }
