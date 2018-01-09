@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.example.yhao.fixedfloatwindow.R;
+import com.yhao.floatwindow.CircularAnim;
 import com.yhao.floatwindow.CircularRevealView;
 import com.yhao.floatwindow.FabAnimationUtils;
 
@@ -17,6 +18,8 @@ public class A_Activity extends AppCompatActivity {
 
 
     private CircularRevealView revealView;
+    private android.os.Handler handler;
+    private View clickView;
     private View v;
 
     @Override
@@ -24,31 +27,63 @@ public class A_Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_a);
         setTitle("A");
-        revealView = (CircularRevealView) findViewById(R.id.reveal);
+//        revealView = (CircularRevealView) findViewById(R.id.reveal);
         BaseApplication.setOnclick(new OnclickInterface() {
+
             @Override
             public void onclick(View view) {
-                launchPowerMenu(view);
+                clickView = view;
+                showNormalDialog();
             }
         });
     }
 
     public void change(View view) {
-        startActivity(new Intent(A_Activity.this, B_Activity.class));
+        // 先将颜色展出铺满，然后启动新的Activity
+        CircularAnim.fullActivity(this, view)
+                        .colorOrImageRes(R.color.colorPrimary)  //注释掉，因为该颜色已经在App.class 里配置为默认色
+                .go(new CircularAnim.OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd() {
+                        startActivity(new Intent(A_Activity.this, B_Activity.class));
+                    }
+                });
     }
 
-    android.os.Handler handler;
+    private void showNormalDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View inflate = View.inflate(this, R.layout.dialog_custom, null);
+        revealView = inflate.findViewById(R.id.reveal);
+        builder.setView(inflate);
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        launchPowerMenu(clickView);
+                    }
+                }, 160);
+            }
+        });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                dismiss(v);
+            }
+        });
+        dialog.show();
+    }
 
     private void launchPowerMenu(final View v) {
         this.v = v;
         final Point p = getLocationInView(revealView, v);
-
         revealView.reveal(p.x, p.y, getResources().getColor(R.color.tran_11), v.getHeight() / 2, 370, null);
-
         FabAnimationUtils.scaleOut(v, new FabAnimationUtils.ScaleCallback() {
             @Override
             public void onAnimationStart() {
-
             }
 
             @Override
@@ -56,19 +91,10 @@ public class A_Activity extends AppCompatActivity {
 //                FabAnimationUtils.scaleIn(v);
             }
         });
-
-        handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                showNormalDialog();
-            }
-        }, 160);
     }
 
     private void dismiss(final View view) {
         final Point p = getLocationInView(revealView, view);
-
         handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -102,16 +128,4 @@ public class A_Activity extends AppCompatActivity {
         return new Point(l1[0], l1[1]);
     }
 
-    private void showNormalDialog(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(R.layout.dialog_custom);
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                dismiss(v);
-            }
-        });
-    }
 }
